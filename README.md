@@ -83,7 +83,5 @@ This project is licensed under the MIT License. See the [LICENSE](LICENSE) file 
 **Disclaimer**: This script is provided as-is. Use it at your own risk. The author is not responsible for any potential issues caused by the usage of this script.
 
 
-### Instructions for Use:
+### Instructions for Use
 
-1. **Copy and Paste**: Copy the above content and save it in a file named `README.md` in the same directory as your script.
-2. **Customize as Needed**: Adjust any sections to better fit your specific use case or additional features.
