@@ -65,7 +65,7 @@ def process_typed_text():
             for char in expanded_text + ' ':
                 controller.type(char)
                 logging.debug(f"Typed character: {char}")
-                
+
     except Exception as e:
         logging.error(f"Error processing typed text: {e}")
 
