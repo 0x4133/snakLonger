@@ -30,13 +30,15 @@ controller = keyboard.Controller()  # Initialize the controller
 
 def on_press(key):
     try:
-        if hasattr(key, 'char') and key.char:
+        if hasattr(key, 'char') and key.char is not None:
             typed_text.append(key.char)
             logging.debug(f"Typed character: {key.char}")
         elif key in {keyboard.Key.space, keyboard.Key.enter}:
             typed_text.append(' ')
             process_typed_text()
             typed_text.clear()
+        else:
+            logging.debug(f"Non-character key pressed: {key}")
     except Exception as e:
         logging.error(f"Error on key press: {e}")
 
@@ -66,10 +68,15 @@ def process_typed_text():
         logging.error(f"Error processing typed text: {e}")
 
 # Set up the keyboard listener
-try:
-    with keyboard.Listener(on_press=on_press) as listener:
-        listener.join()
-except KeyboardInterrupt:
-    logging.info("Text expander stopped.")
-except Exception as e:
-    logging.error(f"Error starting listener: {e}")
+def start_listener():
+    try:
+        with keyboard.Listener(on_press=on_press) as listener:
+            logging.info("Keyboard listener started.")
+            listener.join()
+    except KeyboardInterrupt:
+        logging.info("Text expander stopped.")
+    except Exception as e:
+        logging.error(f"Error starting listener: {e}")
+
+if __name__ == "__main__":
+    start_listener()
