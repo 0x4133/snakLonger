@@ -80,3 +80,4 @@ def start_listener():
 
 if __name__ == "__main__":
     start_listener()
+    logging.info(f"Final typed text: {typed_text}")
