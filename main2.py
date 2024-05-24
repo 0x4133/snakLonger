@@ -1,6 +1,7 @@
 import evdev
 from evdev import InputDevice, categorize, ecodes
 import logging
+import time
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -33,12 +34,12 @@ def process_typed_text():
 
             # Simulate pressing backspace to delete the abbreviation and space
             for _ in range(len(word) + 1):
-                print("BACKSPACE")  # This is a placeholder for actual backspace simulation
+                print("BACKSPACE")  # Placeholder for actual backspace simulation
                 time.sleep(0.01)
 
             # Simulate typing the expanded text
             for char in expanded_text + ' ':
-                print(char, end='', flush=True)  # This is a placeholder for actual typing simulation
+                print(char, end='', flush=True)  # Placeholder for actual typing simulation
                 logging.debug(f"Typed character: {char}")
                 time.sleep(0.01)
 
