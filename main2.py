@@ -96,3 +96,4 @@ for event in device.read_loop():
                         typed_text.clear()
         elif key_event.keystate == key_event.key_up:
             logging.debug(f"Key released: {key_event.keycode}")
+            
