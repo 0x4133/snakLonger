@@ -5,11 +5,45 @@ import logging
 # Configure logging
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
+def load_expansions(file_path):
+    expansions = {}
+    try:
+        with open(file_path, 'r') as file:
+            for line in file:
+                if ':' in line:
+                    abbreviation, expansion = line.strip().split(':', 1)
+                    expansions[abbreviation.strip()] = expansion.strip()
+        logging.info(f"Loaded expansions: {expansions}")
+    except Exception as e:
+        logging.error(f"Error loading expansions: {e}")
+    return expansions
+
+expansions = load_expansions('expansions.txt')
+
 typed_text = []  # Buffer to store typed characters
 
-def log_typed_text():
-    word = ''.join(typed_text).strip()
-    logging.debug(f"Typed text so far: {word}")
+def process_typed_text():
+    try:
+        word = ''.join(typed_text).strip()
+        logging.debug(f"Typed word: {word}")
+
+        if word in expansions:
+            expanded_text = expansions[word]
+            logging.debug(f"Expanding: {word} -> {expanded_text}")
+
+            # Simulate pressing backspace to delete the abbreviation and space
+            for _ in range(len(word) + 1):
+                print("BACKSPACE")  # This is a placeholder for actual backspace simulation
+                time.sleep(0.01)
+
+            # Simulate typing the expanded text
+            for char in expanded_text + ' ':
+                print(char, end='', flush=True)  # This is a placeholder for actual typing simulation
+                logging.debug(f"Typed character: {char}")
+                time.sleep(0.01)
+
+    except Exception as e:
+        logging.error(f"Error processing typed text: {e}")
 
 # Find the input device
 devices = [InputDevice(path) for path in evdev.list_devices()]
@@ -35,9 +69,10 @@ for event in device.read_loop():
                         logging.debug(f"Typed character: {char}")
                     elif keycode == 'KEY_SPACE':
                         typed_text.append(' ')
-                        log_typed_text()
+                        process_typed_text()
+                        typed_text.clear()
                     elif keycode == 'KEY_ENTER':
-                        log_typed_text()
+                        process_typed_text()
                         typed_text.clear()
         elif key_event.keystate == key_event.key_up:
             logging.debug(f"Key released: {key_event.keycode}")
