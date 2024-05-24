@@ -1,83 +1,21 @@
-import logging
-from pynput import keyboard
-import time
+import evdev
+from evdev import InputDevice, categorize, ecodes
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
+# Find the input device
+devices = [InputDevice(path) for path in evdev.list_devices()]
+for device in devices:
+    print(device.path, device.name, device.phys)
 
-def load_expansions(file_path):
-    """
-    Load expansions from a file.
-    Each line in the file should be in the format: abbreviation:expansion
-    """
-    expansions = {}
-    try:
-        with open(file_path, 'r') as file:
-            for line in file:
-                if ':' in line:
-                    abbreviation, expansion = line.strip().split(':', 1)
-                    expansions[abbreviation.strip()] = expansion.strip()
-        logging.info(f"Loaded expansions: {expansions}")
-    except Exception as e:
-        logging.error(f"Error loading expansions: {e}")
-    return expansions
+# Replace 'your_device_path' with the actual device path found above
+device_path = '/dev/input/eventX'  # replace X with the appropriate number
 
-# Load expansions from the file
-expansions = load_expansions('expansions.txt')
+device = InputDevice(device_path)
 
-typed_text = []  # Buffer to store typed characters
-controller = keyboard.Controller()  # Initialize the controller
-
-def on_press(key):
-    try:
-        if hasattr(key, 'char') and key.char is not None:
-            typed_text.append(key.char)
-            logging.debug(f"Typed character: {key.char}")
-        elif key in {keyboard.Key.space, keyboard.Key.enter}:
-            typed_text.append(' ')
-            process_typed_text()
-            typed_text.clear()
-        else:
-            logging.debug(f"Non-character key pressed: {key}")
-    except Exception as e:
-        logging.error(f"Error on key press: {e}")
-
-def process_typed_text():
-    try:
-        word = ''.join(typed_text).strip()
-        logging.debug(f"Typed word: {word}")
-
-        if word in expansions:
-            expanded_text = expansions[word]
-            logging.debug(f"Expanding: {word} -> {expanded_text}")
-
-            # Simulate pressing backspace to delete the abbreviation and space
-            backspace_count = len(word) + 1
-            for _ in range(backspace_count):
-                controller.press(keyboard.Key.backspace)
-                controller.release(keyboard.Key.backspace)
-                logging.debug("Pressed backspace")
-                time.sleep(0.01)
-
-            # Simulate typing the expanded text
-            for char in expanded_text + ' ':
-                controller.type(char)
-                logging.debug(f"Typed character: {char}")
-
-    except Exception as e:
-        logging.error(f"Error processing typed text: {e}")
-
-# Set up the keyboard listener
-def start_listener():
-    try:
-        with keyboard.Listener(on_press=on_press) as listener:
-            logging.info("Keyboard listener started.")
-            listener.join()
-    except KeyboardInterrupt:
-        logging.info("Text expander stopped.")
-    except Exception as e:
-        logging.error(f"Error starting listener: {e}")
-
-if __name__ == "__main__":
-    start_listener()
-    logging.info(f"Final typed text: {typed_text}")
+# Start listening to the input device
+for event in device.read_loop():
+    if event.type == ecodes.EV_KEY:
+        key_event = categorize(event)
+        if key_event.keystate == key_event.key_down:
+            print(f"Key pressed: {key_event.keycode}")
+        elif key_event.keystate == key_event.key_up:
+            print(f"Key released: {key_event.keycode}")
