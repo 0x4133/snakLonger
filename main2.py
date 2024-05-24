@@ -1,5 +1,5 @@
 import evdev
-from evdev import InputDevice, categorize, ecodes
+from evdev import InputDevice, categorize, ecodes, UInput
 import time
 import logging
 
@@ -28,7 +28,7 @@ expansions = load_expansions('expansions.txt')
 
 typed_text = []  # Buffer to store typed characters
 
-def process_typed_text():
+def process_typed_text(ui):
     try:
         word = ''.join(typed_text).strip()
         logging.debug(f"Typed word: {word}")
@@ -40,15 +40,22 @@ def process_typed_text():
             # Simulate pressing backspace to delete the abbreviation and space
             backspace_count = len(word) + 1
             for _ in range(backspace_count):
-                device.write(ecodes.EV_KEY, ecodes.KEY_BACKSPACE, 1)
-                device.write(ecodes.EV_KEY, ecodes.KEY_BACKSPACE, 0)
+                ui.write(ecodes.EV_KEY, ecodes.KEY_BACKSPACE, 1)
+                ui.write(ecodes.EV_KEY, ecodes.KEY_BACKSPACE, 0)
+                ui.syn()
                 time.sleep(0.01)
 
             # Simulate typing the expanded text
             for char in expanded_text + ' ':
-                keycode = ecodes.ecodes['KEY_' + char.upper()] if char.isalpha() else ecodes.ecodes['KEY_SPACE']
-                device.write(ecodes.EV_KEY, keycode, 1)
-                device.write(ecodes.EV_KEY, keycode, 0)
+                if char.isalpha():
+                    keycode = ecodes.ecodes['KEY_' + char.upper()]
+                elif char == ' ':
+                    keycode = ecodes.KEY_SPACE
+                else:
+                    continue  # Skip unsupported characters for simplicity
+                ui.write(ecodes.EV_KEY, keycode, 1)
+                ui.write(ecodes.EV_KEY, keycode, 0)
+                ui.syn()
                 logging.debug(f"Typed character: {char}")
                 time.sleep(0.01)
 
@@ -65,6 +72,9 @@ device_path = '/dev/input/eventX'  # replace X with the appropriate number
 
 device = InputDevice(device_path)
 
+# Create a virtual input device
+ui = UInput()
+
 # Start listening to the input device
 for event in device.read_loop():
     if event.type == ecodes.EV_KEY:
@@ -79,10 +89,10 @@ for event in device.read_loop():
                         logging.debug(f"Typed character: {char}")
                     elif keycode == 'KEY_SPACE':
                         typed_text.append(' ')
-                        process_typed_text()
+                        process_typed_text(ui)
                         typed_text.clear()
                     elif keycode == 'KEY_ENTER':
-                        process_typed_text()
+                        process_typed_text(ui)
                         typed_text.clear()
         elif key_event.keystate == key_event.key_up:
             logging.debug(f"Key released: {key_event.keycode}")
